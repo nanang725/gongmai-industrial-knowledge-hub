@@ -72,7 +72,7 @@ def build(path: Path, title: str, doc_no: str, pages: list[list]) -> None:
     doc = SimpleDocTemplate(
         str(path), pagesize=A4,
         leftMargin=20 * mm, rightMargin=20 * mm, topMargin=18 * mm, bottomMargin=16 * mm,
-        title=title, author="工脉工业知识中枢演示文档",
+        title=title, author="开物工业知识中枢演示文档",
     )
     story = []
     for i, blocks in enumerate(pages, 1):

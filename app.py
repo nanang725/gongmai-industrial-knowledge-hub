@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""app.py —— 工脉 v0.1 服务端（FastAPI）
+"""app.py —— 开物 v0.1 服务端（FastAPI）
 
 启动：
     python app.py            # http://127.0.0.1:8000
@@ -30,7 +30,7 @@ import core
 BASE = Path(__file__).resolve().parent
 WEB = BASE / "web"
 
-app = FastAPI(title="工脉 · 工业设备知识中枢 v0.1", version="0.1.0")
+app = FastAPI(title="开物 · 工业设备知识中枢 v0.1", version="0.1.0")
 
 
 @app.on_event("startup")

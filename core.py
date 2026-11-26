@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""core.py —— 工脉 v0.1 领域引擎
+"""core.py —— 开物 v0.1 领域引擎
 
 职责（全部纯 Python，无重依赖，离线可跑）：
   1. 页码级解析：设备手册 PDF -> 带页码与章节的 chunk（PyMuPDF）
