@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工脉 · 工业设备知识中枢</title>
+<script src="/web/echarts.min.js"></script>
+<style>
+  :root{
+    --ink:#0b1220; --ink-2:#16213a; --line:#e3e8ef; --bg:#f2f5f8;
+    --panel:#ffffff; --muted:#64748b; --accent:#b45309; --accent-2:#d97706;
+    --ok:#0f766e; --fail:#b42318; --p0:#b42318; --p1:#c2410c; --p2:#a16207; --p3:#0f766e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+       background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65}
+  .app{display:flex;min-height:100vh}
+
+  /* ---------- 侧栏 ---------- */
+  aside{width:212px;background:linear-gradient(180deg,#0b1220,#16213a);color:#cbd5e1;
+        padding:22px 0;position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column}
+  .brand{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .brand h1{margin:0;font-size:19px;letter-spacing:2px;color:#fff;font-weight:700}
+  .brand h1 b{color:var(--accent-2)}
+  .brand p{margin:6px 0 0;font-size:11.5px;color:#7c8aa0;letter-spacing:.5px}
+  nav{padding:14px 10px;flex:1}
+  nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;
+        color:#9fb0c6;text-decoration:none;font-size:13.5px;margin-bottom:3px;cursor:pointer;
+        transition:.16s;border-left:2px solid transparent}
+  nav a:hover{background:rgba(255,255,255,.05);color:#e2e8f0}
+  nav a.on{background:rgba(217,119,6,.14);color:#fff;border-left-color:var(--accent-2);font-weight:600}
+  nav a .ic{width:16px;text-align:center;opacity:.85;font-size:13px}
+  .side-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);
+             font-size:11px;color:#64748b;line-height:1.7}
+
+  /* ---------- 主区 ---------- */
+  main{margin-left:212px;flex:1;padding:0 30px 48px;max-width:1220px}
+  header{position:sticky;top:0;z-index:20;background:rgba(242,245,248,.94);
+         backdrop-filter:blur(6px);padding:18px 0 12px;margin-bottom:8px;
+         border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h2{margin:0;font-size:20px;font-weight:700}
+  header .sub{color:var(--muted);font-size:12.5px}
+  .pill{background:#e8eef5;color:#334155;border-radius:20px;padding:2px 11px;font-size:11.5px}
+  .view{display:none;animation:fade .22s ease}
+  .view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- 通用组件 ---------- */
+  .grid{display:grid;gap:16px}
+  .col-4{grid-template-columns:repeat(4,1fr)}
+  .col-2{grid-template-columns:1.45fr 1fr}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .card h3{margin:0 0 14px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .card h3:before{content:"";width:3px;height:13px;background:var(--accent);border-radius:2px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+       position:relative;overflow:hidden}
+  .kpi:after{content:"";position:absolute;right:-16px;top:-16px;width:56px;height:56px;
+             border-radius:50%;background:rgba(217,119,6,.07)}
+  .kpi .n{font-size:30px;font-weight:800;letter-spacing:-1px;font-family:ui-monospace,Consolas,monospace;color:var(--ink)}
+  .kpi .n small{font-size:13px;font-weight:600;color:var(--muted);margin-left:3px}
+  .kpi .l{color:var(--muted);font-size:12px;margin-top:2px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-weight:600;color:var(--muted);font-size:11.5px;letter-spacing:.6px;
+     padding:0 10px 9px;border-bottom:1px solid var(--line);text-transform:uppercase}
+  td{padding:10px;border-bottom:1px solid #eef2f6}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbfd}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
+  .dot.ok{background:var(--ok)} .dot.fail{background:var(--fail)}
+  .lv{display:inline-block;min-width:30px;text-align:center;border-radius:4px;padding:1px 7px;
+      font-size:11px;font-weight:700;color:#fff;font-family:ui-monospace,monospace}
+  .lv.P0{background:var(--p0)} .lv.P1{background:var(--p1)}
+  .lv.P2{background:var(--p2)} .lv.P3{background:var(--p3)}
+  .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:4px;background:#eef2f7;color:#475569}
+  .tag.manual{background:#e0f2f1;color:#0f766e}
+  .tag.workorder{background:#fef3c7;color:#92400e}
+  .tag.knowledge{background:#e0e7ff;color:#3730a3}
+
+  /* ---------- 问答 ---------- */
+  .ask-box{display:flex;gap:10px;margin-bottom:14px}
+  .ask-box input{flex:1;padding:13px 16px;border:1px solid var(--line);border-radius:9px;
+                 font-size:14px;font-family:inherit;outline:none;background:#fff}
+  .ask-box input:focus{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(217,119,6,.12)}
+  .btn{background:var(--ink);color:#fff;border:none;padding:0 24px;border-radius:9px;
+       font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:.16s}
+  .btn:hover{background:var(--accent)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 14px;
+        font-size:12.5px;color:#475569;cursor:pointer;transition:.16s}
+  .chip:hover{border-color:var(--accent-2);color:var(--accent);background:#fffbf5}
+  .answer{border-left:3px solid var(--accent);background:#fffdf8;padding:16px 18px;border-radius:0 8px 8px 0;
+          margin-bottom:18px;font-size:14.5px;line-height:1.85}
+  .answer .meta{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .refuse{border-left-color:var(--fail);background:#fef6f5}
+  .ev{background:#fff;border:1px solid var(--line);border-radius:9px;padding:13px 15px;margin-bottom:10px}
+  .ev .h{display:flex;align-items:center;gap:9px;margin-bottom:7px;flex-wrap:wrap}
+  .ev .t{font-weight:600;font-size:13px}
+  .page{background:var(--ink);color:#fff;font-size:11px;padding:1px 8px;border-radius:4px;
+        font-family:ui-monospace,monospace}
+  .ev .s{color:#475569;font-size:12.8px;line-height:1.75;
+         display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .kv{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+  .kv span{background:#f1f5f9;border-radius:5px;padding:2px 9px;font-size:11.5px;color:#334155}
+
+  /* ---------- 知识库 ---------- */
+  .doc{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px 16px;
+       cursor:pointer;transition:.16s;margin-bottom:10px}
+  .doc:hover{border-color:var(--accent-2);box-shadow:0 3px 14px rgba(15,23,42,.06)}
+  .doc .r1{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .doc .name{font-weight:600;font-size:13.5px}
+  .doc .sec{margin-top:9px;color:var(--muted);font-size:12.2px;line-height:1.8}
+  .modal{position:fixed;inset:0;background:rgba(11,18,32,.5);display:none;z-index:99;
+         align-items:center;justify-content:center;padding:40px}
+  .modal.on{display:flex}
+  .modal .box{background:#fff;border-radius:12px;max-width:900px;width:100%;max-height:82vh;
+              overflow:auto;padding:26px 30px}
+  .modal h3{margin:0 0 4px;font-size:17px}
+  .modal .close{float:right;cursor:pointer;color:var(--muted);font-size:20px;line-height:1}
+  .sec-item{border-top:1px solid var(--line);padding:13px 0}
+  .sec-item .st{font-weight:600;font-size:13px;display:flex;gap:9px;align-items:center}
+  .sec-item p{margin:7px 0 0;font-size:12.8px;color:#334155;white-space:pre-wrap}
+
+  /* ---------- 图谱 ---------- */
+  #graph{width:100%;height:560px;background:#fff;border:1px solid var(--line);border-radius:10px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0 0;font-size:12px;color:#475569}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+
+  /* ---------- 诊断 ---------- */
+  .impact{border-radius:12px;padding:22px 26px;color:#fff;margin-bottom:18px;
+          background:linear-gradient(120deg,#7f1d1d,#b42318)}
+  .impact.P1{background:linear-gradient(120deg,#7c2d12,#c2410c)}
+  .impact.P2{background:linear-gradient(120deg,#713f12,#a16207)}
+  .impact.P3{background:linear-gradient(120deg,#134e4a,#0f766e)}
+  .impact .big{font-size:34px;font-weight:800;letter-spacing:1px;font-family:ui-monospace,monospace}
+  .impact .t1{font-size:12px;opacity:.8;letter-spacing:1px}
+  .impact .t2{font-size:14.5px;margin-top:8px;max-width:820px;line-height:1.7}
+  .steps ol{margin:0;padding-left:20px}
+  .steps li{margin-bottom:9px;font-size:13.3px;color:#334155}
+  .empty{color:var(--muted);font-size:13px;padding:26px;text-align:center}
+  .flow{flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 20px;
+        margin-bottom:16px;display:flex;align-items:center;gap:12px;font-size:12.5px;
+        color:#475569;overflow-x:auto}
+  .flow b{color:var(--ink)}
+  .arrow{color:var(--accent-2);font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <h1>工<b>脉</b></h1>
+      <p>工业设备知识中枢 v0.1</p>
+    </div>
+    <nav>
+      <a class="on" data-v="dash"><span class="ic">▦</span>运行概览</a>
+      <a data-v="docs"><span class="ic">▤</span>设备知识库</a>
+      <a data-v="ask"><span class="ic">◈</span>证据化问答</a>
+      <a data-v="graph"><span class="ic">◉</span>知识图谱</a>
+      <a data-v="diag"><span class="ic">⚠</span>故障诊断</a>
+    </nav>
+    <div class="side-foot">
+      <div>只读 · 本地部署</div>
+      <div>每条结论可溯源至页码</div>
+      <div id="builtAt" style="margin-top:8px;color:#475569"></div>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <h2 id="pageTitle">运行概览</h2>
+      <span class="sub" id="siteName"></span>
+      <span class="pill">演练环境 · 非真实产线</span>
+    </header>
+
+    <!-- 概览 -->
+    <section class="view on" id="v-dash">
+      <div class="grid col-4" style="margin-bottom:18px" id="kpis"></div>
+      <div class="grid col-2">
+        <div class="card">
+          <h3>设备台账与实时状态</h3>
+          <table id="assetTable"><tbody><tr><td class="empty">加载中…</td></tr></tbody></table>
+        </div>
+        <div class="card">
+          <h3>巡检证据链</h3>
+          <div id="flowLine" class="flow"></div>
+          <table id="evTable"><tbody><tr><td class="empty">加载中…</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 知识库 -->
+    <section class="view" id="v-docs">
+      <div class="flow">
+        <b>知识来源</b><span class="arrow">→</span>设备手册 PDF（页码级解析）
+        <span class="arrow">→</span>维修工单（结构化归档）
+        <span class="arrow">→</span>故障模式知识库（机理约束）
+        <span class="arrow">→</span>统一检索与证据溯源
+      </div>
+      <div id="docList"></div>
+    </section>
+
+    <!-- 问答 -->
+    <section class="view" id="v-ask">
+      <div class="card" style="margin-bottom:16px">
+        <h3>用现场语言提问，答案必须带证据</h3>
+        <div class="ask-box">
+          <input id="q" placeholder="例如：焊装线多台机器人同时掉站，交换机 CRC 计数激增，怎么排查？"
+                 onkeydown="if(event.key==='Enter')doAsk()">
+          <button class="btn" onclick="doAsk()">检索并作答</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div id="askOut"></div>
+      </div>
+    </section>
+
+    <!-- 图谱 -->
+    <section class="view" id="v-graph">
+      <div class="card" style="padding:14px 16px">
+        <h3>现象 — 根因 — 处置 关系网（每条边带页码证据）</h3>
+        <div id="graph"></div></div></section>
+
+    <!-- 诊断 -->
+    <section class="view" id="v-diag">
+      <div id="diagOut"></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="box">
+    <span class="close" onclick="closeModal()">×</span>
+    <h3 id="mTitle"></h3>
+    <div style="color:var(--muted);font-size:12px;margin-bottom:10px" id="mMeta"></div>
+    <div id="mBody"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pageName = {dash:'运行概览', docs:'设备知识库', ask:'证据化问答', graph:'知识图谱', diag:'故障诊断'};
+
+document.querySelectorAll('nav a').forEach(a => a.onclick = () => {
+  document.querySelectorAll('nav a').forEach(x => x.classList.remove('on'));
+  a.classList.add('on');
+  const v = a.dataset.v;
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('on'));
+  $('#v-' + v).classList.add('on');
+  $('#pageTitle').textContent = pageName[v];
+  if (v === 'graph') setTimeout(drawGraph, 60);
+});
+
+async function api(url, opt) {
+  const r = await fetch(url, opt);
+  return r.json();
+}
+
+/* ---------- 概览 ---------- */
+async function loadDash() {
+  const [st, dg] = await Promise.all([api('/api/stats'), api('/api/diagnose')]);
+  $('#siteName').textContent = st.site || '';
+  $('#builtAt').textContent = '索引构建 ' + (st.built_at || '');
+  const kpis = [
+    ['设备手册', st.manuals, '份', st.pages + ' 页可解析'],
+    ['维修工单', st.workorders, '份', '结构化归档'],
+    ['知识片段', st.chunks, '条', '页码级切分'],
+    ['图谱关系', st.edges, '条', '每条带证据'],
+  ];
+  $('#kpis').innerHTML = kpis.map(([l, n, unit, sub]) =>
+    `<div class="kpi"><div class="n">${n}<small>${unit}</small></div>
+     <div class="l">${l} · ${sub}</div></div>`).join('');
+
+  $('#assetTable').innerHTML = `<thead><tr><th>设备</th><th>协议</th><th>产线</th><th>影响</th><th>状态</th></tr></thead>
+    <tbody>${dg.assets.map(a => `<tr>
+      <td><b>${esc(a.name)}</b><div class="mono" style="color:#94a3b8;font-size:11px">${esc(a.host)}</div></td>
+      <td>${esc(a.protocol)}</td><td>${esc(a.line)}</td>
+      <td><span class="lv ${a.impact}">${a.impact}</span></td>
+      <td><span class="dot ${a.status === 'ok' ? 'ok' : 'fail'}"></span>${a.status === 'ok' ? '正常' : a.status === 'fail' ? '异常' : '未检测'}</td>
+    </tr>`).join('')}</tbody>`;
+
+  $('#flowLine').innerHTML = ['采集', '证据结构化', '知识检索', '分层定位', '影响分级', '处置归档']
+    .map((x, i) => (i ? '<span class="arrow">→</span>' : '') + `<b>${x}</b>`).join(' ');
+
+  $('#evTable').innerHTML = `<thead><tr><th>目标</th><th>检测</th><th>结果</th><th>时延</th></tr></thead>
+    <tbody>${dg.evidence.map(e => `<tr>
+      <td>${esc(e.name)}</td><td class="mono">${esc(e.check_type)}</td>
+      <td><span class="dot ${e.ok ? 'ok' : 'fail'}"></span>${e.ok ? '通过' : '<b style="color:#b42318">失败</b>'}</td>
+      <td class="mono">${e.latency != null ? e.latency + ' ms' : '—'}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+/* ---------- 知识库 ---------- */
+const tagName = {manual:'设备手册', workorder:'维修工单', knowledge:'知识库'};
+async function loadDocs() {
+  const {docs} = await api('/api/docs');
+  $('#docList').innerHTML = docs.map(d => `<div class="doc" onclick="openDoc('${d.doc_id}')">
+    <div class="r1"><span class="name">${esc(d.title)}</span>
+      <span class="tag ${d.type}">${tagName[d.type] || d.type}</span></div>
+    <div class="sec">${d.type === 'manual' ? d.pages + ' 页 · ' : ''}${d.chunks} 个知识片段${d.sections.length ? ' · ' + d.sections.slice(0, 3).map(esc).join(' / ') : ''}</div>
+  </div>`).join('');
+}
+async function openDoc(id) {
+  const d = await api('/api/docs/' + id);
+  $('#mTitle').textContent = d.title;
+  $('#mMeta').textContent = (tagName[d.type] || d.type) + ' · 共 ' + d.chunks.length + ' 个片段 · 每个片段可回指页码';
+  $('#mBody').innerHTML = d.chunks.map(c => `<div class="sec-item">
+      <div class="st">${c.page ? '<span class="page">第 ' + c.page + ' 页</span>' : '<span class="page">' + (tagName[d.type] || '') + '</span>'}
+      ${esc(c.section || '正文')}</div>
+      <p>${esc(c.text.slice(0, 420))}${c.text.length > 420 ? '…' : ''}</p>
+    </div>`).join('');
+  $('#modal').classList.add('on');
+}
+function closeModal(){ $('#modal').classList.remove('on'); }
+
+/* ---------- 问答 ---------- */
+const EXAMPLES = [
+  '焊装线多台机器人同时掉站，交换机 CRC 计数激增，怎么排查？',
+  'PLC 的 102 端口能连上，但读写一直超时',
+  '包装线视觉工位周期性丢包，8 秒后自愈',
+  'Modbus 读到的数据整体错位一格',
+  '总装线主 PLC 新连接全部被拒，老连接正常',
+];
+$('#chips').innerHTML = EXAMPLES.map(q => `<span class="chip" onclick="$('#q').value=this.textContent;doAsk()">${esc(q)}</span>`).join('');
+
+async function doAsk() {
+  const q = $('#q').value.trim();
+  if (q.length < 2) return;
+  $('#askOut').innerHTML = '<div class="empty">检索中…</div>';
+  const r = await api('/api/ask', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({question: q, top_k: 5})
+  });
+  const kv = (label, arr, cls) => arr && arr.length
+    ? `<div class="kv">${arr.map(x => `<span>${label} · ${esc(x)}</span>`).join('')}</div>` : '';
+  $('#askOut').innerHTML = `
+    <div class="answer ${r.answered ? '' : 'refuse'}">
+      <div class="meta">
+        <span>作答模式：${r.mode === 'refused' ? '证据不足·拒答' : '证据约束作答'}</span>
+        <span>置信度：${(r.confidence * 100).toFixed(0)}%</span>
+        <span>引用证据：${r.evidence.length} 条</span>
+      </div>
+      ${esc(r.answer)}
+      ${kv('机理', r.causes)}${kv('处置', r.remedies)}${kv('影响等级', r.safety)}
+    </div>
+    <h3 style="font-size:13px;color:var(--muted);margin:0 0 10px">证据清单（每条可回指文档与页码）</h3>
+    ${r.evidence.map((e, i) => `<div class="ev">
+      <div class="h">
+        <span class="tag ${e.doc_type}">${tagName[e.doc_type] || e.doc_type}</span>
+        <span class="t">${esc(e.doc_title)}</span>
+        ${e.page ? `<span class="page">第 ${e.page} 页</span>` : ''}
+        <span style="color:#94a3b8;font-size:11.5px">相关度 ${e.score} · 证据 ${i + 1}</span>
+      </div>
+      ${e.section ? `<div style="color:var(--accent);font-size:12px;margin-bottom:4px">${esc(e.section)}</div>` : ''}
+      <div class="s">${esc(e.snippet)}</div>
+    </div>`).join('')}`;
+}
+
+/* ---------- 图谱 ---------- */
+let chart = null;
+async function drawGraph() {
+  const g = await api('/api/graph');
+  if (!chart) chart = echarts.init($('#graph'));
+  const typeColor = {symptom:'#b42318', cause:'#c2410c', remedy:'#0f766e',
+                     equipment:'#1d4ed8', component:'#6b7280',
+                     manual:'#475569', workorder:'#92400e', safety:'#a16207'};
+  const typeName = {symptom:'故障现象', cause:'根因', remedy:'处置措施', equipment:'设备',
+                    component:'部件', manual:'设备手册', workorder:'维修工单', safety:'安全等级'};
+  const nodes = [], links = [];
+  const seen = new Set();
+  Object.entries(g.nodes).forEach(([type, arr]) => arr.forEach(n => {
+    const id = type + ':' + n;
+    if (seen.has(id)) return;
+    seen.add(id);
+    nodes.push({id, name: n, category: type,
+      symbolSize: type === 'symptom' || type === 'cause' ? 26 : 18,
+      itemStyle: {color: typeColor[type] || '#94a3b8'}});
+  }));
+  g.edges.forEach(e => {
+    const s = e.source_type + ':' + e.source, t = e.target_type + ':' + e.target;
+    if (!seen.has(s) || !seen.has(t)) return;
+    links.push({source: s, target: t, value: e.relation,
+      lineStyle: {width: Math.min(3, 1 + e.weight * 0.4), opacity: .55, curveness: .12},
+      tooltip: {formatter: () => `<b>${esc(e.relation)}</b><br>${esc(e.doc_title)}${e.page ? ' 第 ' + e.page + ' 页' : ''}<br><span style="color:#94a3b8">${esc(e.evidence)}</span>`}});
+  });
+  const cats = Object.keys(g.nodes).filter(k => g.nodes[k].length).map(k => ({name: typeName[k] || k}));
+  chart.setOption({
+    tooltip: {trigger: 'item', confine: true},
+    legend: [{data: cats.map(c => c.name), bottom: 0, textStyle: {fontSize: 11, color: '#475569'}}],
+    series: [{
+      type: 'graph', layout: 'force', roam: true, draggable: true,
+      data: nodes.map(n => ({...n, category: cats.findIndex(c => c.name === (typeName[n.category] || n.category))})),
+      links, categories: cats,
+      force: {repulsion: 260, edgeLength: [70, 150], gravity: .08},
+      label: {show: true, fontSize: 11, color: '#334155', position: 'right'},
+      emphasis: {focus: 'adjacency', lineStyle: {width: 3}},
+      lineStyle: {color: 'source'}
+    }]
+  });
+}
+
+/* ---------- 诊断 ---------- */
+async function loadDiag() {
+  const d = await api('/api/diagnose');
+  $('#diagOut').innerHTML = `
+    <div class="impact ${d.impact}">
+      <div class="t1">停机影响等级</div>
+      <div class="big">${d.impact}</div>
+      <div class="t2"><b>分层定位：${esc(d.layer)}</b><br>${esc(d.headline)}</div>
+      <div class="t1" style="margin-top:12px">巡检 ${d.total} 项 · 失败 ${d.failed} 项 · ${esc(d.generated_at)}</div>
+    </div>
+    <div class="grid col-2">
+      <div class="card">
+        <h3>失败项与现场证据</h3>
+        <table><thead><tr><th>目标</th><th>检测</th><th>证据原文</th></tr></thead>
+        <tbody>${d.failures.map(f => `<tr>
+          <td><b>${esc(f.name)}</b><div class="mono" style="color:#94a3b8;font-size:11px">${esc(f.host)}</div></td>
+          <td class="mono">${esc(f.check_type)}</td>
+          <td style="color:#475569">${esc(f.detail)}</td></tr>`).join('')
+          || '<tr><td colspan="3" class="empty">本次巡检无失败项</td></tr>'}</tbody></table>
+      </div>
+      <div class="card steps">
+        <h3>处置步骤（按顺序执行）</h3>
+        <ol>${d.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>知识依据（诊断结论引用的文档与页码）</h3>
+      ${d.knowledge.map(e => `<div class="ev">
+        <div class="h"><span class="tag ${e.doc_type}">${tagName[e.doc_type] || e.doc_type}</span>
+          <span class="t">${esc(e.doc_title)}</span>
+          ${e.page ? `<span class="page">第 ${e.page} 页</span>` : ''}
+          <span style="color:#94a3b8;font-size:11.5px">相关度 ${e.score}</span></div>
+        ${e.section ? `<div style="color:var(--accent);font-size:12px;margin-bottom:4px">${esc(e.section)}</div>` : ''}
+        <div class="s">${esc(e.snippet)}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+loadDash(); loadDocs(); loadDiag();
+/* 支持 ?v=ask 直达指定视图，便于截图与演示 */
+const initV = new URLSearchParams(location.search).get('v');
+if (initV) { const a = document.querySelector(`nav a[data-v="${initV}"]`); if (a) a.click(); }
+if (new URLSearchParams(location.search).get('q')) {
+  $('#q').value = new URLSearchParams(location.search).get('q');
+  document.querySelector('nav a[data-v="ask"]').click();
+  doAsk();
+}
+</script>
+</body>
+</html>
