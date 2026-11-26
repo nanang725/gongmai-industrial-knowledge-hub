@@ -1,0 +1,133 @@
+{
+  "timestamp": "2026-11-26T04:20:11+00:00",
+  "scenario": "演练数据：模拟焊装线 3 号交换机上行光链路劣化 + 一段时间内总装线主 PLC 连接被占满。用于在没有真实产线时验证诊断链路，不代表真实生产现场。",
+  "local": {
+    "hostname": "eng-nb-07",
+    "os": "Windows 10 10.0.19045",
+    "gateways": [
+      "192.168.10.1"
+    ],
+    "dns": [
+      "192.168.10.2",
+      "192.168.10.3"
+    ],
+    "ipv4": [
+      "192.168.10.207"
+    ]
+  },
+  "results": [
+    {
+      "name": "车间核心交换机",
+      "host": "192.168.10.1",
+      "check_type": "ping",
+      "ok": true,
+      "latency_ms": 1.2,
+      "detail": "可达, 丢包 0%",
+      "extra": {
+        "loss_percent": 0,
+        "count": 3
+      }
+    },
+    {
+      "name": "总装线主 PLC",
+      "host": "192.168.10.10",
+      "check_type": "port:102",
+      "ok": true,
+      "latency_ms": 8.4,
+      "detail": "端口 102 开放",
+      "extra": {
+        "port": 102
+      }
+    },
+    {
+      "name": "焊装线 PLC",
+      "host": "192.168.10.11",
+      "check_type": "ping",
+      "ok": false,
+      "latency_ms": null,
+      "detail": "请求超时",
+      "extra": {
+        "loss_percent": 100,
+        "count": 3
+      }
+    },
+    {
+      "name": "总装线 HMI",
+      "host": "192.168.10.20",
+      "check_type": "port:102",
+      "ok": false,
+      "latency_ms": null,
+      "detail": "端口 102 不可达: timed out",
+      "extra": {
+        "port": 102
+      }
+    },
+    {
+      "name": "能耗采集网关",
+      "host": "192.168.10.30",
+      "check_type": "port:502",
+      "ok": true,
+      "latency_ms": 12.7,
+      "detail": "端口 502 开放",
+      "extra": {
+        "port": 502
+      }
+    },
+    {
+      "name": "包装线变频器组",
+      "host": "192.168.10.31",
+      "check_type": "port:502",
+      "ok": true,
+      "latency_ms": 21.3,
+      "detail": "端口 502 开放",
+      "extra": {
+        "port": 502
+      }
+    },
+    {
+      "name": "视觉检测工位",
+      "host": "192.168.10.40",
+      "check_type": "ping",
+      "ok": true,
+      "latency_ms": 268.5,
+      "detail": "可达, 丢包 24%",
+      "extra": {
+        "loss_percent": 24,
+        "count": 3
+      }
+    },
+    {
+      "name": "视觉检测工位",
+      "host": "192.168.10.40",
+      "check_type": "port:1883",
+      "ok": true,
+      "latency_ms": 33.9,
+      "detail": "端口 1883 开放",
+      "extra": {
+        "port": 1883
+      }
+    },
+    {
+      "name": "车间 NTP 源",
+      "host": "192.168.10.50",
+      "check_type": "port:123",
+      "ok": false,
+      "latency_ms": null,
+      "detail": "端口 123 不可达: Connection refused",
+      "extra": {
+        "port": 123
+      }
+    },
+    {
+      "name": "SCADA 上位机",
+      "host": "192.168.10.60",
+      "check_type": "port:4840",
+      "ok": true,
+      "latency_ms": 9.1,
+      "detail": "端口 4840 开放",
+      "extra": {
+        "port": 4840
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "site": "离散制造车间 · 演练环境（模拟拓扑，非真实产线）",
+  "note": "本台账为参赛演示构造的模拟车间，设备名称为通用工业角色，不指向任何真实企业。",
+  "assets": [
+    {"host": "192.168.10.1", "name": "车间核心交换机", "role": "switch", "protocol": "L2", "line": "全车间", "impact": "P0", "vendor": "工业以太网交换机"},
+    {"host": "192.168.10.10", "name": "总装线主 PLC", "role": "plc", "protocol": "Siemens S7comm", "port": 102, "line": "总装线", "impact": "P1", "vendor": "S7-1500 系列"},
+    {"host": "192.168.10.11", "name": "焊装线 PLC", "role": "plc", "protocol": "Siemens S7comm", "port": 102, "line": "焊装线", "impact": "P1", "vendor": "S7-1200 系列"},
+    {"host": "192.168.10.20", "name": "总装线 HMI", "role": "hmi", "protocol": "S7comm", "port": 102, "line": "总装线", "impact": "P2", "vendor": "工业触摸屏"},
+    {"host": "192.168.10.30", "name": "能耗采集网关", "role": "gateway", "protocol": "Modbus TCP", "port": 502, "line": "能源", "impact": "P3", "vendor": "边缘网关"},
+    {"host": "192.168.10.31", "name": "包装线变频器组", "role": "drive", "protocol": "Modbus TCP", "port": 502, "line": "包装线", "impact": "P2", "vendor": "通用变频器"},
+    {"host": "192.168.10.40", "name": "视觉检测工位", "role": "vision", "protocol": "HTTP/MQTT", "port": 1883, "line": "包装线", "impact": "P2", "vendor": "视觉检测单元"},
+    {"host": "192.168.10.50", "name": "车间 NTP 源", "role": "ntp", "protocol": "NTP", "port": 123, "line": "全车间", "impact": "P3", "vendor": "时钟服务器"},
+    {"host": "192.168.10.60", "name": "SCADA 上位机", "role": "scada", "protocol": "OPC UA", "port": 4840, "line": "全车间", "impact": "P2", "vendor": "组态软件站"}
+  ]
+}
